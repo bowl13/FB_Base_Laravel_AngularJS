@@ -15,7 +15,7 @@ cd [directorio]
 * Migrar tablas y poblar datos 
 
 ```sh
-php artisan:migrate
+php artisan migrate
 php artisan db:seed
 ```
 ***
