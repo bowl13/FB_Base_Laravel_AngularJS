@@ -11,12 +11,13 @@ git clone [git-repo-url]
 cd [directorio]
 ```
 
+* Ejecutar actualización dependencias Laravel `composer update`
 * Configurar credenciales MySql según ambiente (local/qa/production)
 * Migrar tablas y poblar datos 
 
 ```sh
-php artisan migrate
-php artisan db:seed
+php artisan migrate --env=local
+php artisan db:seed --env=local
 ```
 ***
 
