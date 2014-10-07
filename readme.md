@@ -13,7 +13,7 @@ cd [directorio]
 
 * Ejecutar actualización dependencias Laravel `composer update`
 * Configurar credenciales MySql según ambiente (local/qa/production)
-* Migrar tablas y poblar datos 
+* Migrar tablas y poblar datos
 
 ```sh
 php artisan migrate --env=local
@@ -31,7 +31,7 @@ bower install
 
 ###Configurar url de ambientes
 
-La aplicación reconce el ambiente(Environment) según la url que se trabaje, es por este que se debe considerar lo siguiente:
+La aplicación reconoce el ambiente (Environment) según la url que se trabaje, es por este que se debe considerar lo siguiente:
 
 * `local` environment: la url debe contener la palabra `local`, ej: `miapp.local.com`, `dev.local.com`
 * `qa` environment: la url debe contener la palabra `qa`, ej: `miapp.qa.com`, `dev.qa.com`

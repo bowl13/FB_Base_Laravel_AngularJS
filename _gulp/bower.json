@@ -14,9 +14,19 @@
   "devDependencies": {
     "jquery": "~2.0.3",
     "underscore": "~1.5.2",
+    "modernizr": "*",
+    "jeet.gs": "*",
+    "bourbon": "*",
+    "fontawesome": "*",
+    "bootstrap-sass-official": "*",
+    "pesticide": "git://github.com/mrmrs/pesticide",
+    "raulghm-sass-utils": "*",
     "angular": "~1.2.24",
     "angular-route": "~1.2.24",
     "angular-cookies": "~1.2.24",
-    "angular-facebook": "~0.2.3"
+    "angular-facebook": "~0.2.3",
+    "velocity": "~1.1.0",
+    "angulartics": "~0.16.5",
+    "angular-animate": "~1.2.25"
   }
 }

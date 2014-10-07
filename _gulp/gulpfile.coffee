@@ -14,90 +14,147 @@ uglify         = require("gulp-uglify")
 coffee         = require("gulp-coffee")
 cache          = require("gulp-cached")
 clean          = require("gulp-clean")
+imagemin       = require("gulp-imagemin")
 browserSync    = require("browser-sync")
 gulpStripDebug = require("gulp-strip-debug")
-lr             = require("tiny-lr")
-livereload     = require("gulp-livereload")
+reload         = require("gulp-livereload")
 templateCache  = require('gulp-angular-templatecache');
-server         = lr()
+runSequence    = require('run-sequence');
 
 # paths
-src          = "src"
-dest         = "../public/"
-
-#
-#  gulp tasks
-#  ==========================================================================
+src            = "src/"
+dest           = "../public/"
 
 
-# clean
-gulp.task "clean", ->
-  gulp.src [
-    dest + "/scripts/*.*"
-    dest + "/styles/*.*"
-    dest + "/img/*.*"
-    dest + "*.html"
-  ]
-  .pipe clean()
+SCRIPTS = [
+  "bower_components/jquery/jquery.js"
+  "bower_components/velocity/velocity.js"
+  "bower_components/velocity/velocity.ui.js"
+  "bower_components/angular/angular.js"
+  "bower_components/angular-route/angular-route.js"
+  "bower_components/angular-facebook/lib/angular-facebook.js"
+  "bower_components/angulartics/src/angulartics.js"
+  "bower_components/angulartics/src/angulartics-ga.js"
+  "bower_components/angular-cookies/angular-cookies.js"
+  "bower_components/angular-animate/angular-animate.js"
+  src + "scripts/app.js"
+  src + "scripts/controllers.js"
+  src + "scripts/factory.js"
+  src + "scripts/directives.js"
+  src + "scripts/templates.js"
+  src + "scripts/scripts.js"
+]
 
 #
 # Dev task
 # ====================
-# 
-#copy js scripts app
-gulp.task "copy-js-libs", ->
-  gulp.src [
-    "bower_components/angular/angular.js",
-    "bower_components/angular-route/angular-route.js",
-    "bower_components/angular-facebook/lib/angular-facebook.js",
-    "bower_components/angular-cookies/angular-cookies.js",
-    "bower_components/jquery/jquery.js",
-  ]
-  .pipe gulp.dest dest + "assets/scripts"
-  .pipe livereload()
-#copy js scripts app
-gulp.task "copy-js", ->
-  gulp.src [
-    src + "/scripts/*.js"
-  ]
-  .pipe gulp.dest dest + "assets/scripts"
-  .pipe livereload()
-#copy template
-gulp.task "copy-tpl", ->
+#
+
+# clean
+gulp.task "clean", ->
+  gulp.src dest + 'assets/*'
+  .pipe clean
+    force: true
+
+# copy images
+gulp.task "images", ->
+  gulp.src src + "images/**/*.*"
+  .pipe gulp.dest dest + "assets/images"
+  .pipe reload()
+
+# copy and minify images
+gulp.task "images-minify", ->
+  gulp.src src + "images/**/*.*"
+  .pipe imagemin
+    progressive: true
+  .pipe gulp.dest dest + "assets/images"
+
+# copy templates
+gulp.task "templates-php", ->
   gulp.src [
     src + "/template/*.php"
   ]
   .pipe gulp.dest "../app/views"
-  .pipe livereload()
-#copy template
-gulp.task "copy-html", ->
+
+# copy templates and concat html
+gulp.task "templates", ["templates-php"], ->
   gulp.src [
     src + "/html/partials/*.html"
   ]
-  # .pipe(templateCache())
   .pipe(templateCache('templates.js', { module:'templatescache', standalone:true }))
   .pipe gulp.dest dest + "assets/scripts"
-  .pipe livereload()
+
+# copy and concat js app
+gulp.task "scripts", ->
+  gulp.src SCRIPTS
+  .pipe concat "scripts.js"
+  .pipe gulp.dest dest + "assets/scripts"
+  .pipe reload()
+
+# copy and concat js app
+gulp.task "scripts-dist", ->
+  gulp.src SCRIPTS
+  .pipe concat "scripts.js"
+  .pipe uglify
+    mangle: false
+  .pipe gulp.dest dest + "assets/scripts"
+
+# styles
+gulp.task "styles", ->
+  gulp.src src + "/styles/styles.scss"
+  .pipe plumber()
+  .pipe sass
+    sourceComments: "normal"
+    errLogToConsole: false
+    onError: (err) -> notify().write(err)
+  .pipe autoprefixer("last 15 version")
+  .pipe gulp.dest dest + "/assets/styles"
+  .pipe reload()
+
+# styles-dist
+gulp.task "styles-dist",  ->
+  gulp.src src + "/styles/styles.scss"
+  .pipe plumber()
+  .pipe sass()
+  .on "error", notify.onError()
+  .on "error", (err) ->
+    console.log "Error:", err
+  .pipe autoprefixer("last 15 version")
+  .pipe minifycss
+    keepSpecialComments: 0
+  .pipe gulp.dest dest + "/assets/styles"
+
+# watch files
 gulp.task 'watch', ->
-  gulp.watch [src + '/scripts/*.js'], ['copy-js']
-  gulp.watch [src + '/template/*.php'], ['copy-tpl']
-  gulp.watch [src + '/html/partials/*.html'], ['copy-html']
+  gulp.watch [src + '/scripts/*.js'], ['scripts']
+  gulp.watch [src + '/html/**/*.html', src + '/template/*.php'], ['templates']
+  gulp.watch [src + '/styles/**/*.scss'], ['styles']
+  gulp.watch [src + '/images/**/*.*'], ['images']
 
 #
-# Dist task
-# ====================
-# 
-
-
-#
-#  main tasks
+#  defaul task
 #  ==========================================================================
 
-# default task
-gulp.task 'default', [
-  "copy-js-libs"
-  "copy-js"
-  "copy-tpl"
-  "copy-html"
-  "watch"
-]
+gulp.task "default", ["clean"], (cb) ->
+  runSequence "styles", [
+    "clean"
+    "scripts"
+    "images"
+    "templates"
+    "styles"
+    "watch"
+  ], cb
+
+#
+# dist task
+# ====================
+#
+
+gulp.task "dist", ["clean"], (cb) ->
+  runSequence "styles-dist", [
+    "clean"
+    "scripts-dist"
+    "images-minify"
+    "templates"
+    "styles-dist"
+  ], cb
